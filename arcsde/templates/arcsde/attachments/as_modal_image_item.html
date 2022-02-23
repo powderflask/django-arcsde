@@ -1,0 +1,6 @@
+{#  Format attachment to be displayed in modal_carousel #}
+{% load sde_tags %}
+    <div class="item" id="item-{{ attachment.pk }}">
+        {% include 'arcsde/attachments/as_image_tag.html' %}
+        {% attachment_caption attachment %}
+    </div>

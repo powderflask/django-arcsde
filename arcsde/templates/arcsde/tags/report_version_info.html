@@ -1,0 +1,21 @@
+{# Format the report versioning info e.g., from arcsde.models.AbstractArcSdeFeature #}
+
+    <table>
+        <thead>
+            <tr>
+                {% if created_by %}<td>Created By</td>{% endif %}
+                <td>Last Modified By</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% if created_by %}<td>{{ created_by }}</td>{% endif %}
+                <td>{{ edited_by }}</td>
+            </tr>
+            <tr>
+                {% if created_by %}<td>{{ created_on }}</td>{% endif %}
+                <td>{{ edited_on }}</td>
+            </tr>
+        </tbody>
+    </table>
+

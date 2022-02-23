@@ -1,0 +1,27 @@
+{# An editable image caption - usually inluded via sde_tags.attachemnt_caption #}
+
+<div id='{{ caption_id }}' class="editable-caption bse-edit-this bse-toggle-that"
+     data-form_id="{{ form_id }}"                         {# Edit This form #}
+     data-init_toggle="false"                             {# Toggle That option #}
+>
+
+    <div class="bse-edit-this-content bse-toggle-that-target caption-text">
+        <span>{{ attachment.caption_text }}</span>
+    </div>
+
+    <form action="{{ form_action }}" method="post" id="{{ form_id }}" class="caption-form bse-toggle-that-target">
+        {% csrf_token %}
+        <button class="close bse-toggle-that-control" type="button" title="Cancel">×</button>
+        <div class="caption-buttons ">
+            <input type="submit" name="save-caption" value="Save" class="btn btn-primary">
+        </div>
+        <div id="div_id_att_name" class="form-group caption-att_name">
+            <div class="controls ">
+                <textarea name="att_name" cols="40" rows="2" maxlength="250"
+                          class="bse-edit-this-control caption-edit textarea form-control"
+                          required="" id="id_att_name">{{ attachment.att_name }}</textarea>
+            </div>
+        </div>
+    </form>
+
+</div>
