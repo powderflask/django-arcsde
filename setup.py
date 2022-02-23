@@ -21,7 +21,6 @@ with open('README.rst') as readme_file:
 
 requirements = [
         'Django>=2.2,<3.0',
-        'setuptools-git',    # apparently needed to handle include_package_data from git repo?
     ]
 
 test_requirements = [ ]

@@ -41,7 +41,7 @@ Testing
 Unit tests must be run with `DJANGO_SETTINGS=arcsde.tests.settings`
 arcsde.tests.models and migrations create a dummy SDE-like model with attachment table for testing.
 
-**migrations for test moodels**
+**migrations for test models**
 * tests.models don't have migrations - test DB is defined directly from models
 * depends on MIGRATION_MODULES setting in tests.settings! (https://docs.djangoproject.com/en/dev/ref/settings/#migration-modules)
 
