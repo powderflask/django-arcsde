@@ -45,7 +45,7 @@ setup(
     include_package_data=True,
     keywords='django arc sde',
     name='django-arcsde',
-    packages=find_packages(include=['arcsde', 'arcsde.*']),
+    packages=find_packages(include=['arcsde*']),
     test_suite='arcsde.tests',
     tests_require=test_requirements,
     url='https://github.com/powderflask/django-arcsde',
