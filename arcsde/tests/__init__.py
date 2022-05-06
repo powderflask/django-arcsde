@@ -1,8 +1,9 @@
-
-default_app_config = 'arcsde.tests.apps.ArcSdeTestsConfig'
-
 import os
 import sys
+import django
+
+if django.VERSION < (3, 2):
+    default_app_config = 'arcsde.tests.apps.ArcSdeTestsConfig'
 
 TEST_SETTINGS = "arcsde.tests.settings"
 
