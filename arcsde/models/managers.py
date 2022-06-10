@@ -135,6 +135,16 @@ class ArcSdeQuerySet(models.QuerySet):
         annotation =  models.Count('attachment_set') if self.model.has_attachments() else models.Value(0)
         return self.annotate(attachment_count=annotation)
 
+    @staticmethod
+    def recent_period_start(period_in_hours):
+        """ return a Datetime object representing the start time for a period that starts period_in_hours hours ago """
+        return util.recent_period_start(period_in_hours)
+
+    def recent_features(self, period_in_hours) :
+        """ filter for features created in the past period_in_hours hours """
+        period_start = self.recent_period_start(period_in_hours)
+        return self.filter(created_date__gte=period_start).order_by('-created_date')
+
 
 class ArcSdeManager(models.Manager.from_queryset(ArcSdeQuerySet)):
     """
@@ -148,15 +158,9 @@ class ArcSdeManager(models.Manager.from_queryset(ArcSdeQuerySet)):
         # all SDE report queries must start with sde_active!
         return super().get_queryset().sde_active()
 
-    @staticmethod
-    def recent_period_start(period_in_hours):
-        """ return a Datetime object representing the start time for a period that starts period_in_hours hours ago """
-        return util.recent_period_start(period_in_hours)
-
     def recent_features(self, period_in_hours) :
         """ return a queryset of all features created in the past period_in_hours hours """
-        period_start = self.recent_period_start(period_in_hours)
-        return self.get_queryset().filter(created_date__gte=period_start).order_by('-created_date')
+        return self.get_queryset().recent_features(period_in_hours)
 
 
 class AnnotatedArcSdeManager(ArcSdeManager) :
