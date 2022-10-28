@@ -127,10 +127,13 @@ class ArcSdeQuerySet(models.QuerySet):
                   and the default image attachment viewer does an async request for images any how.
                 --> certainly NEVER do this unless you are 100% sure you will use ALL the attachments!
         """
-        return self.prefetch_related('attachment_set') if self.model.has_attachments() else self
+        return self.prefetch_related('attachment_set')
 
     def annotate_attachment_count(self):
-        """ Add an attachment_count annotation to the model with the number of SDE attachments """
+        """
+        Add an attachment_count annotation to the model with the number of SDE attachments
+        Warning: this method accesses model class variable - don't call it until models are loaded!
+        """
         # return self.annotate(attachment_count=sde_attachment_count(self.model))
         annotation =  models.Count('attachment_set') if self.model.has_attachments() else models.Value(0)
         return self.annotate(attachment_count=annotation)
