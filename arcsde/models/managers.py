@@ -27,7 +27,7 @@ class ArcSdeQuerySet(models.QuerySet):
         annotate records with username to be used to update SDE edit tracking field on save
         tightly coupled with ArcSdeRevisionFieldsMixin that uses this annotation to update  last_edited_user
         """
-        return self.annotate(**{self.SDE_EDITED_BY_ANNOTATION: username})
+        return self.annotate(**{self.SDE_EDITED_BY_ANNOTATION: models.Value(username)})
 
     def sde_shape_as_text(self):
         """

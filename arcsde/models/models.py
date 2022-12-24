@@ -183,7 +183,7 @@ class ArcSdeRevisionFieldsMixin(models.Model):
         """
         username = getattr(self, self.SDE_EDITED_BY_ANNOTATION, None)
         if not username:
-            msg = self.EDIT_TRACKING_ERROR.format(feature=self)
+            msg = self.EDIT_TRACKING_ERROR.format(feature=repr(self))
             if settings.settings.DEBUG:  # in DEBUG mode, throw an exception so bug is hopefully caught in testing.
                 raise RuntimeError(msg)
             logger.error(msg)            # in production, supply a default placeholder and log the programming error
