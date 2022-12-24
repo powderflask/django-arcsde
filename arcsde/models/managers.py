@@ -18,7 +18,16 @@ class ArcSdeQuerySet(models.QuerySet):
     """
         Querysets for SDE feature models
     """
+    SDE_EDITED_BY_ANNOTATION = 'arcsde_last_edited_user'
+
     ACTIVE_GDB_TO_DATE = datetime.datetime(9999, 12, 31, 23, 59, 59)
+
+    def set_edited_by(self, username):
+        """
+        annotate records with username to be used to update SDE edit tracking field on save
+        tightly coupled with ArcSdeRevisionFieldsMixin that uses this annotation to update  last_edited_user
+        """
+        return self.annotate(**{self.SDE_EDITED_BY_ANNOTATION: username})
 
     def sde_shape_as_text(self):
         """

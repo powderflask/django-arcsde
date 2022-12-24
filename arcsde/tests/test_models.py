@@ -58,17 +58,20 @@ class ArcSdeRevisionFieldsMixinTests(BaseModelsTests):
     def test_create_user(self):
         sde_feature = self._get_feature()
         user = self._get_user()
-        sde_feature.save(user=user)
+        setattr(sde_feature, sde_feature.SDE_EDITED_BY_ANNOTATION, user.username)
+        sde_feature.save()
         self.assertEqual(sde_feature.last_edited_user, user.username)
         self.assertTrue(sde_feature.was_last_edited_by(user))
 
     def test_edit_user(self):
         sde_feature = self._get_feature()
         user = self._get_user()
-        sde_feature.save(user=user)
+        setattr(sde_feature, sde_feature.SDE_EDITED_BY_ANNOTATION, user.username)
+        sde_feature.save()
 
         other_user = get_user_model().objects.create(username='AnotherUser', email='another@example.com', password='abc123')
-        self.sde_feature.save(user=other_user)
+        setattr(sde_feature, sde_feature.SDE_EDITED_BY_ANNOTATION, other_user.username)
+        self.sde_feature.save()
         self.assertEqual(self.sde_feature.last_edited_user, other_user.username)
         self.assertTrue(self.sde_feature.was_last_edited_by(other_user))
 
@@ -76,7 +79,8 @@ class ArcSdeRevisionFieldsMixinTests(BaseModelsTests):
         then = datetime.now(tz=tz.LOCAL_TIME_ZONE)
         sde_feature = self._get_feature()
         user = self._get_user()
-        sde_feature.save(user=user)
+        setattr(sde_feature, sde_feature.SDE_EDITED_BY_ANNOTATION, user.username)
+        sde_feature.save()
         now = datetime.now(tz=tz.LOCAL_TIME_ZONE)
         version_info = sde_feature.get_report_version_info()
         self.assertEqual(version_info['edited_by'], user.username)
@@ -95,9 +99,10 @@ class AbstractArcSdeFeatureTests(BaseModelsTests):
         # verify that objectid is the primary key field
         sde_feature.pk = 999
         self.assertEqual(sde_feature.pk, sde_feature.objectid, 'objectid attr is not the primary key field')
-        # verify business logic
-        sde_feature.update_edited_by('some_user')
-        self.assertEqual(sde_feature.last_edited_user, 'some_user', 'update_edited_by not working.')
+        # verify edit tracking logic
+        setattr(sde_feature, sde_feature.SDE_EDITED_BY_ANNOTATION, 'some_user')
+        sde_feature.update_edit_tracking()
+        self.assertEqual(sde_feature.last_edited_user, 'some_user', 'update_edit_tracking not working.')
 
     def test_create(self):
         sde_feature = self._get_feature()

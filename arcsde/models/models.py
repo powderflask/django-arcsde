@@ -9,10 +9,14 @@ To allow switching between table-backed and evw view-backed models:
     - always define model.Meta.db_table = sde_db_table('base_table_name')
     - define settings.SDE_USE_EVW = False to back models directly with a db table.
 """
+import logging
+
 from django.db import models, connection
 from django.utils import timezone
 from arcsde import settings, tz
 from arcsde.models import managers, fields
+
+logger = logging.getLogger('arcsde')
 
 
 def sde_db_table(base_table_name, use_evw=settings.SDE_USE_EVW):
@@ -150,6 +154,10 @@ class ArcSdeRevisionFieldsMixin(models.Model):
     class Meta:
         abstract = True
 
+    SDE_EDITED_BY_ANNOTATION = managers.ArcSdeQuerySet.SDE_EDITED_BY_ANNOTATION
+    EDIT_TRACKING_ERROR = f'''SDE feature ({{feature}}) saved without {SDE_EDITED_BY_ANNOTATION} annotation on instance.
+    Add .set_edited_by(username) to queryset to track requester's username in SDE last_edited_user field.'''
+
     LAST_EDITED_DATE_BASE = 'last_edited_date'
     LAST_EDITED_USER_BASE = 'last_edited_user'
     last_edited_date_field = LAST_EDITED_DATE_BASE
@@ -167,11 +175,19 @@ class ArcSdeRevisionFieldsMixin(models.Model):
         base_user = getattr(self, self.LAST_EDITED_USER_BASE, None)
         return user or base_user or "None"
 
-    def update_edited_by(self, username):
+    def update_edit_tracking(self):
         """
             Call to update the last_edited_user / date fields.
-            Always update the BASE fields - a DB trigger determines if the associated *_field_* gets updated.
+            Always update the BASE fields - DB trigger determines if the associated *_field_* gets updated.
+            Look for annotation that clients must set to enable edit tracking - log error if it is not provided.
         """
+        username = getattr(self, self.SDE_EDITED_BY_ANNOTATION, None)
+        if not username:
+            msg = self.EDIT_TRACKING_ERROR.format(feature=self)
+            if settings.settings.DEBUG:  # in DEBUG mode, throw an exception so bug is hopefully caught in testing.
+                raise RuntimeError(msg)
+            logger.error(msg)            # in production, supply a default placeholder and log the programming error
+            username = settings.SDE_EDIT_TRACKING_DEFAULT_USERNAME
         setattr(self, self.LAST_EDITED_USER_BASE, username)
         setattr(self, self.LAST_EDITED_DATE_BASE, timezone.now())
 
@@ -195,10 +211,9 @@ class ArcSdeRevisionFieldsMixin(models.Model):
 
 
     def save(self, *args, **kwargs):
-        """ Ensure 'audit trail' is saved for each new revision  -- caller MUST pass user=request.user for this to work """
-        user = kwargs.pop('user', None)
-        if user:
-            self.update_edited_by(user.username)
+        """ Save edit tracking fields for each new revision  - client MUST set_edited_by(u) on qs for this to work """
+        if settings.SDE_EDIT_TRACKING:
+            self.update_edit_tracking()
         super().save(*args, **kwargs)
 
 
