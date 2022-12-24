@@ -15,10 +15,12 @@ def mock_globalid():
 
 def create_sde_feature(model_class, **kwargs):
     """ Create an SDE feature instance suitable for testing, for given ArcSdeFeature model_class """
-    return model_class.objects.create(objectid=mock_objectid(),
-                                      globalid=mock_globalid(),
-                                      **kwargs)
-
+    instance = model_class(objectid=mock_objectid(),
+                           globalid=mock_globalid(),
+                           **kwargs)
+    setattr(instance, models.ArcSdeRevisionFieldsMixin.SDE_EDITED_BY_ANNOTATION, 'arcsde_test_fixture')
+    instance.save()
+    return instance
 
 class MockSdeIdsMixin(django.db.models.Model):
 
