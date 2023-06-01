@@ -185,7 +185,7 @@ class ArcSdeRevisionFieldsMixin(models.Model):
         if not username:
             msg = self.EDIT_TRACKING_ERROR.format(feature=repr(self))
             if settings.settings.DEBUG:  # in DEBUG mode, throw an exception so bug is hopefully caught in testing.
-                raise RuntimeError(msg)
+                raise Exception(msg)
             logger.error(msg)            # in production, supply a default placeholder and log the programming error
             username = settings.SDE_EDIT_TRACKING_DEFAULT_USERNAME
         setattr(self, self.LAST_EDITED_USER_BASE, username)
