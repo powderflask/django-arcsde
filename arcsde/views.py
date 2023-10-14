@@ -31,28 +31,12 @@ class JSONResponseMixin(object):
         return context
 
 
+# TODO: consider re-factoring JSON views as suggested: https://docs.djangoproject.com/en/3.2/topics/class-based-views/mixins/#more-than-just-html
 class AjaxOnlyView(JSONResponseMixin, generic.base.ContextMixin, generic.base.View):
-    """ A generic View with a text/ajax mimetype that yields a 405 for non-AJAX requests """
+    """ A generic View with a JSON response  """
 
     messages_template = "arcsde/ajax/messages.html"
     form_errors_template = "arcsde/ajax/form_errors.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        # Add check for Ajax to normal dispatch logic.
-        if not request.is_ajax():
-            return self._ajax_only_allowed(request)
-        else:
-            return super().dispatch(request, *args, **kwargs)
-
-    @staticmethod
-    def _ajax_only_allowed(request):
-        generic.base.logger.warning('Non-AJAX request Not Allowed (%s): %s', request.method, request.path,
-            extra={
-                'status_code': 405,
-                'request': request
-            }
-        )
-        return http.HttpResponseNotAllowed(('AJAX', ))
 
     def get(self, request, *args, **kwargs):
         """
@@ -63,14 +47,27 @@ class AjaxOnlyView(JSONResponseMixin, generic.base.ContextMixin, generic.base.Vi
         }
         return self.render_to_json_response(response_data)
 
+    def get_error_context(self, msg, form):
+        """ Return some context for error tracing - user is only shown a simple msg since no user-fixable errors """
+        messages.add_message(self.request, messages.ERROR, msg)
+        return {**self._message_context(), **self._form_errors_context(form)}
+
+    def get_messages(self):
+        """ Return formatted messages for any messages in the queue - side-effect: clear message queue! """
+        return get_template(self.messages_template).render(context={'messages':messages.get_messages(self.request)})
+
     def _message_context(self, success=False):
         return {
             'success' : success,
-            'message' : get_template(self.messages_template).render(context={'messages':messages.get_messages(self.request)}),
+            'message' : self.get_messages(),
         }
+
+    def get_form_errors(self, form, strip_tags=False):
+        """ Return formatted form_errors using the form_errors_template """
+        return get_template(self.form_errors_template).render(context={'form':form, 'strip_tags':strip_tags})
 
     def _form_errors_context(self, form, strip_tags=False):
         return {
             'success' : False,
-            'errors' : get_template(self.form_errors_template).render(context={'form':form, 'strip_tags':strip_tags})
+            'errors' : self.get_form_errors(form, strip_tags)
         }

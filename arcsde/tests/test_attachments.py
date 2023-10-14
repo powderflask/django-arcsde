@@ -10,7 +10,7 @@ class BaseAttachmentModelTests(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.feature = SdeFeatureModel()
+        self.feature = SdeFeatureModel.objects.create()
 
     def get_attachment_model(self):
         return models.get_attachment_model(SdeFeatureModel)

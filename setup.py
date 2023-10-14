@@ -20,7 +20,7 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-        'Django>=2.2,<4.0',
+        'Django>=3.2.18,<5.0',
     ]
 
 test_requirements = [ ]
