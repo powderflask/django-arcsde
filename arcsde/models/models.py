@@ -175,13 +175,15 @@ class ArcSdeRevisionFieldsMixin(models.Model):
         base_user = getattr(self, self.LAST_EDITED_USER_BASE, None)
         return user or base_user or "None"
 
-    def update_edit_tracking(self):
+    def update_edit_tracking(self, username=None):
         """
             Call to update the last_edited_user / date fields.
+            Normal case: feature queryset .set_edited_by(username) to automated edit tracking on save,
+            Optionally: pass username directly, e.g., for bulk updates where save logic is skipped.
             Always update the BASE fields - DB trigger determines if the associated *_field_* gets updated.
             Look for annotation that clients must set to enable edit tracking - log error if it is not provided.
         """
-        username = getattr(self, self.SDE_EDITED_BY_ANNOTATION, None)
+        username = username or getattr(self, self.SDE_EDITED_BY_ANNOTATION, None)
         if not username:
             msg = self.EDIT_TRACKING_ERROR.format(feature=repr(self))
             if settings.settings.DEBUG:  # in DEBUG mode, throw an exception so bug is hopefully caught in testing.
