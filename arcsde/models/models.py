@@ -133,6 +133,15 @@ class ArcSdeFeatureCreationMixin(models.Model):
             return cursor.fetchone()[0]
 
 
+class SdeVersionField(models.DateTimeField):
+    def formfield(self, **kwargs):
+        """ Define a hidden DateTime field used as versioning mechanism for concurrency detection. """
+        from arcsde import forms
+        defaults = {'form_class': forms.SdeVersionField}
+        defaults.update(kwargs)
+        return super().formfield(**defaults)
+
+
 class ArcSdeRevisionFieldsMixin(models.Model):
     """
         Fields used to track revision information on SDE models.
@@ -146,7 +155,7 @@ class ArcSdeRevisionFieldsMixin(models.Model):
     last_edited_user = models.CharField(max_length=255, blank=True, null=True,
                                     verbose_name='Last Modified By'  # set by custom save() method on SdeModelForm
                                     )
-    last_edited_date = models.DateTimeField(blank=True, null=True,
+    last_edited_date = SdeVersionField(blank=True, null=True,
                                     auto_now=True,                    # set to "now()" on every save.
                                     verbose_name='Date Last Modified'
                                     )

@@ -19,3 +19,7 @@ SDE_EDIT_TRACKING = getattr(settings, 'SDE_EDIT_TRACKING', True)
 # Default value to use in production environment where client code fails to .set_edited_by(username) on saved instance
 # Need to write something to this field - a error is logged if this value is ever used.
 SDE_EDIT_TRACKING_DEFAULT_USERNAME = getattr(settings, 'SDE_EDIT_TRACKING_DEFAULT_USERNAME', 'django-sde-webapp')
+
+# Default value enables concurrency detection and locks on SDE forms.
+# Set to False to disable concurrency detection.
+SDE_CONCURRENCY_LOCK = getattr(settings, 'SDE_CONCURRENCY_LOCK', True)

@@ -4,9 +4,14 @@
 from datetime import datetime
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django import forms
 
 from arcsde import models, tz
-from .models import SdeFeatureModel, SdeGeomFeature, SdePointFeature
+from .models import (
+    SdeFeatureModel,
+    SdeGeomFeature, SdePointFeature,
+    SdeFeatureForm, SdeFeatureFormWithObjectid,
+)
 
 class TableNameTests(TestCase):
 
@@ -38,14 +43,17 @@ class BaseModelsTests(TestCase):
         self.user = None
 
     def tearDown(self):
-        if self.sde_feature:
+        if self.sde_feature and self.sde_feature.pk is not None:
             self.sde_feature.delete()
         if self.user:
             self.user.delete()
 
-    def _get_feature(self):
+    def _get_feature(self, save=False):
         if not self.sde_feature:
             self.sde_feature = SdeFeatureModel()
+        if save:
+            setattr(self.sde_feature, self.sde_feature.SDE_EDITED_BY_ANNOTATION, self._get_user().username)
+            self.sde_feature.save()
         return self.sde_feature
 
     def _get_user(self):
@@ -56,18 +64,14 @@ class BaseModelsTests(TestCase):
 
 class ArcSdeRevisionFieldsMixinTests(BaseModelsTests):
     def test_create_user(self):
-        sde_feature = self._get_feature()
+        sde_feature = self._get_feature(save=True)
         user = self._get_user()
-        setattr(sde_feature, sde_feature.SDE_EDITED_BY_ANNOTATION, user.username)
-        sde_feature.save()
         self.assertEqual(sde_feature.last_edited_user, user.username)
         self.assertTrue(sde_feature.was_last_edited_by(user))
 
     def test_edit_user(self):
-        sde_feature = self._get_feature()
+        sde_feature = self._get_feature(save=True)
         user = self._get_user()
-        setattr(sde_feature, sde_feature.SDE_EDITED_BY_ANNOTATION, user.username)
-        sde_feature.save()
 
         other_user = get_user_model().objects.create(username='AnotherUser', email='another@example.com', password='abc123')
         setattr(sde_feature, sde_feature.SDE_EDITED_BY_ANNOTATION, other_user.username)
@@ -77,16 +81,73 @@ class ArcSdeRevisionFieldsMixinTests(BaseModelsTests):
 
     def test_version_info(self):
         then = datetime.now(tz=tz.LOCAL_TIME_ZONE)
-        sde_feature = self._get_feature()
+        sde_feature = self._get_feature(save=True)
         user = self._get_user()
-        setattr(sde_feature, sde_feature.SDE_EDITED_BY_ANNOTATION, user.username)
-        sde_feature.save()
         now = datetime.now(tz=tz.LOCAL_TIME_ZONE)
         version_info = sde_feature.get_report_version_info()
         self.assertEqual(version_info['edited_by'], user.username)
         self.assertGreaterEqual(version_info['edited_on'], then)
         self.assertLessEqual(version_info['edited_on'], now)
         self.assertTrue('created_by' in version_info.keys() and 'created_on' in version_info.keys())
+
+
+class ConcurrencyLockTests(BaseModelsTests):
+    """ Test optimistic lock implemented in base AbstractSdeForm """
+    def test_inherits_version_field(self):
+        """ Child form should inherit the version field, even though it doesn't mention it. """
+        sde_feature = self._get_feature(save=True)
+        form = SdeFeatureForm(instance=sde_feature)
+        self.assertTrue('last_edited_date' in form.fields)
+        self.assertEqual(type(form.fields['last_edited_date'].widget), forms.HiddenInput)
+
+    def test_with_valid_version(self):
+        """ If form data version is identical to instance version, concurrency check passes. """
+        sde_feature = self._get_feature(save=True)
+        form = SdeFeatureForm(
+            data=dict(some_attr='test', last_edited_date=sde_feature.last_edited_date),
+            instance=sde_feature
+        )
+        self.assertTrue(form.is_valid())
+
+    def test_no_version(self):
+        """ If no version is available in form data, no concurrency check is performed """
+        sde_feature = self._get_feature(save=True)
+        form = SdeFeatureForm(
+            data=dict(some_attr='test',),
+            instance=sde_feature
+        )
+        self.assertTrue(form.is_valid())
+
+    def test_outdated_version(self):
+        """ if version date is stale, then concurrency check raises a validation error """
+        sde_feature = self._get_feature(save=True)
+        form = SdeFeatureForm(
+            data=dict(some_attr='test', last_edited_date=datetime(year=2000, month=1, day=1)),
+            instance=sde_feature
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('Concurrent', str(form.non_field_errors()))
+        self.assertIn('modified', str(form.non_field_errors()))
+
+    def test_form_with_pk(self):
+        """ model formset adds hidden pk to each form - form data should match instance """
+        sde_feature = self._get_feature(save=True)
+        form = SdeFeatureFormWithObjectid(
+            data=dict(some_attr='test', objectid=sde_feature.pk, last_edited_date=sde_feature.last_edited_date),
+            instance=sde_feature
+        )
+        self.assertTrue(form.is_valid())
+
+    def test_deleted_version(self):
+        """ if pk in form does not match instance, then concurrency check raises a validation error """
+        sde_feature = self._get_feature()
+        form = SdeFeatureFormWithObjectid(
+            data=dict(some_attr='test', objectid=42, last_edited_date=datetime.now()),
+            instance=sde_feature
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('Concurrent', str(form.non_field_errors()))
+        self.assertIn('deleted', str(form.non_field_errors()))
 
 
 class AbstractArcSdeFeatureTests(BaseModelsTests):

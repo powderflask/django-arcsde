@@ -4,7 +4,7 @@ SDE feature model managers and querysets
 
 Encapsulates the of details for performing queries on Arc SDE database.
 
-Provides access to WKT text represenation and some simple spatial queries.
+Provides access to WKT text representation and some simple spatial queries.
     Note: SDE stores shapes in proprietary Arc format, but django-gis only works with OGC format data
           Shapes may be converted to WKT (text) using sde, then back to a GEOS geometry using PostGIS:
 """

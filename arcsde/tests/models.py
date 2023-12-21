@@ -1,7 +1,8 @@
 
 import uuid
 import django.db.models
-from arcsde import models
+import django.forms
+from arcsde import models, forms
 
 MAX_INT = 0xffffffff//2  # Postgre uses 4-byte integer with max value 2147483647
 
@@ -36,12 +37,27 @@ class MockSdeIdsMixin(django.db.models.Model):
 
 
 class SdeFeatureModel(MockSdeIdsMixin, models.ArcSdeAttachmentsMixin, models.AbstractArcSdeFeature):
+    some_attr = django.db.models.CharField(verbose_name='some_attr',  blank=True, default='', max_length=50)
+
     class Meta:
         app_label = 'arcsde_tests'
         db_table = 'sde_feature'
 
     sde_attachments = models.ArcSdeAttachments()
 
+
+class SdeFeatureForm(forms.AbstractSdeForm):
+    """ Critically, child form inherits version field from base form, used for concurrency check """
+    class Meta:
+        model = SdeFeatureModel
+        fields = ('some_attr', )  # notice child form need not specify the version field - django will include it.
+
+
+class SdeFeatureFormWithObjectid(SdeFeatureForm):
+    objectid = django.forms.IntegerField(widget=django.forms.HiddenInput())
+
+    class Meta(SdeFeatureForm.Meta):
+        fields = ('some_attr', )
 
 
 class SdePointFeature(MockSdeIdsMixin, models.ArcSdePointMixin, models.AbstractArcSdeFeature):
