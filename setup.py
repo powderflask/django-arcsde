@@ -28,7 +28,7 @@ test_requirements = [ ]
 setup(
     author="powderflask",
     author_email='powderflask@gmail.com',
-    python_requires='>=3.6, <4',
+    python_requires='>=3.10, <4',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
@@ -49,6 +49,6 @@ setup(
     test_suite='arcsde.tests',
     tests_require=test_requirements,
     url='https://github.com/powderflask/django-arcsde',
-    version='1.2.0',
+    version='1.3.0',
     zip_safe=False,
 )
