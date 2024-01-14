@@ -41,6 +41,14 @@ class AbstractSdeForm(forms.ModelForm):
     concurrency_lock_field = 'last_edited_date'  # version field for optimistic lock
     last_edited_date = SdeVersionField()
 
+    def __init__(self, *args, initial=None, **kwargs):
+        """ Configure the initial value for lock field, since field is not expected to be included in Meta.fields """
+        initial = initial or {}
+        instance = kwargs.get('instance')
+        if hasattr(instance, self.concurrency_lock_field):
+            initial.setdefault(self.concurrency_lock_field, getattr(instance, self.concurrency_lock_field))
+        super().__init__(*args, initial=initial, **kwargs)
+
     def clean(self):
         """ SDE feature-specific validation. """
         cleaned_data = super().clean()
@@ -69,11 +77,15 @@ class AbstractSdeForm(forms.ModelForm):
             version_timestamp=version_timestamp,
             version_pk=version_pk,
         ):
-            msg = "Feature was deleted in Map or another browser tab." \
-                if not self.instance.pk and self.instance.pk != version_pk else \
+            msg = "Feature was removed in Map or another browser tab." \
+                if version_pk and not self.instance.pk  else \
                   "Data was modified in Map or another browser tab."
             raise ValidationError(f'Concurrent feature edit detected. {msg}')
 
+
+def same_instance(form_instance, form_pk_data):
+    """ Django converts form PK data into an instance... sometimes.  Return True if 2 items represent same instance """
+    return form_instance == form_pk_data or (form_instance and form_instance.pk == form_pk_data)
 
 def _optimistic_lock(model_instance, version_field, version_timestamp, version_pk=False):
     """
@@ -89,10 +101,10 @@ def _optimistic_lock(model_instance, version_field, version_timestamp, version_p
         return True
 
     # if form data includes version field, verify version matches instance.
-    version_matches = version_timestamp is None or getattr(model_instance, version_field) == version_timestamp
+    version_matches = not version_timestamp or getattr(model_instance, version_field) == version_timestamp
 
     # if form data includes version pk field, verify pk matches instance.
-    pk_matches = version_pk is False or model_instance.pk == version_pk
+    pk_matches = version_pk is False or same_instance(model_instance, version_pk)
 
     if version_matches and pk_matches:
         # "lock" obtained - form data version matches model instance version.
