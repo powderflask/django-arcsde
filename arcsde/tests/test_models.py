@@ -147,7 +147,7 @@ class ConcurrencyLockTests(BaseModelsTests):
         )
         self.assertFalse(form.is_valid())
         self.assertIn('Concurrent', str(form.non_field_errors()))
-        self.assertIn('deleted', str(form.non_field_errors()))
+        self.assertIn('removed', str(form.non_field_errors()))
 
 
 class AbstractArcSdeFeatureTests(BaseModelsTests):

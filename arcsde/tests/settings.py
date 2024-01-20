@@ -66,10 +66,9 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'  # 'US/Pacific'
+TIME_ZONE = 'UTC'
+SDE_LOCAL_TIME_ZONE = 'US/Pacific'
 
 USE_I18N = False
-
-USE_L10N = False
 
 USE_TZ = False  # ArcSDE date/times are stored without timezone info in UTC.  Doesn't play nice with Django TZ logic
