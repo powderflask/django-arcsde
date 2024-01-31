@@ -103,33 +103,43 @@ class ArcSdeFeatureCreationMixin(models.Model):
         Test cases for models that use this mixin should set globalid=uuid.uuid4() when creating test fixture instances
             - see arcsde.tests.models for convenience method for creating SDE test fixture data
     """
+    # SDE DB procs to fetch next keys for new features
+    NEXT_GLOBALID = 'next_globalid'
+    NEXT_OBJECTID = 'next_rowid'
+
     class Meta:
         abstract = True
 
     def save(self,*args, **kwargs):
         """ Set values for globalid and objectid keys before saving new records """
         if not self.globalid:
-            self.globalid = models.expressions.RawSQL('next_globalid()', params=())
+            self.globalid = models.expressions.RawSQL(f'{self.NEXT_GLOBALID}()', params=())
         if hasattr(self, 'objectid') and not self.objectid:
             self.objectid = self.get_next_objectid()
+            # seems better to do following, but generates really odd objectid values.  Question in to Simon.
+            # self.objectid = models.expressions.RawSQL(*self.next_objectid_call())
         return super().save(*args, **kwargs)
 
-    @staticmethod
-    def get_next_globalid():
+    @classmethod
+    def get_next_globalid(cls):
         """ Get the next SDE globalid """
-        NEXT_GLOBALID = 'next_globalid'
         with connection.cursor() as cursor:
-            cursor.callproc(NEXT_GLOBALID, [])
+            cursor.execute(f"SELECT * FROM {cls.NEXT_GLOBALID}()", [])
             return cursor.fetchone()[0]
+
+    @classmethod
+    def next_objectid_call(cls, owner=None, table=None):
+        """ Return the dB proc call, as a string, and parameter list, to get the next SDE objectid for given table """
+        table = table or cls._meta.db_table
+        owner = owner or pg_table_owner(table)  # why does Arc need the table owner to compute next ID?  why Arc, why?
+        return f"{cls.NEXT_OBJECTID}(%s, %s)", (owner, table)
 
     @classmethod
     def get_next_objectid(cls, owner=None, table=None):
         """ Get the next SDE objectid for given table """
-        NEXT_OBJECTID = 'next_rowid'
-        table = table or cls._meta.db_table
-        owner = owner or pg_table_owner(table)  # why does Arc need the table owner to compute next ID?  why Arc, why?
+        fn_call, params = cls.next_objectid_call(owner, table)
         with connection.cursor() as cursor:
-            cursor.callproc(NEXT_OBJECTID, [owner, table])
+            cursor.execute(f"SELECT * FROM {fn_call}", params)
             return cursor.fetchone()[0]
 
 
