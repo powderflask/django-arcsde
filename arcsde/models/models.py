@@ -166,7 +166,6 @@ class ArcSdeRevisionFieldsMixin(models.Model):
                                     verbose_name='Last Modified By'  # set by custom save() method on SdeModelForm
                                     )
     last_edited_date = SdeVersionField(blank=True, null=True,
-                                    auto_now=True,                    # set to "now()" on every save.
                                     verbose_name='Date Last Modified'
                                     )
 
