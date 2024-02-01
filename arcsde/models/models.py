@@ -112,12 +112,10 @@ class ArcSdeFeatureCreationMixin(models.Model):
 
     def save(self,*args, **kwargs):
         """ Set values for globalid and objectid keys before saving new records """
-        if not self.globalid:
+        if hasattr(self, 'globalid') and not self.globalid:
             self.globalid = models.expressions.RawSQL(f'{self.NEXT_GLOBALID}()', params=())
         if hasattr(self, 'objectid') and not self.objectid:
-            self.objectid = self.get_next_objectid()
-            # seems better to do following, but generates really odd objectid values.  Question in to Simon.
-            # self.objectid = models.expressions.RawSQL(*self.next_objectid_call())
+            self.objectid = models.expressions.RawSQL(*self.next_objectid_call())
         return super().save(*args, **kwargs)
 
     @classmethod
