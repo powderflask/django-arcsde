@@ -74,7 +74,7 @@ class AbstractArcSdeBase(models.Model):
 
     # If using base tables, we need the gdb_to_date to filter results.
     if not settings.SDE_USE_EVW:
-        gdb_to_date = models.DateTimeField(editable=False)
+        gdb_to_date = fields.ArcSdeDateTimeField(editable=False)
 
     # Selects only the "active" (non-archived) records
     objects = managers.ArcSdeManager()
@@ -141,7 +141,7 @@ class ArcSdeFeatureCreationMixin(models.Model):
             return cursor.fetchone()[0]
 
 
-class SdeVersionField(models.DateTimeField):
+class SdeVersionField(fields.ArcSdeDateTimeField):
     def formfield(self, **kwargs):
         """ Define a hidden DateTime field used as versioning mechanism for concurrency detection. """
         from arcsde import forms
@@ -157,7 +157,7 @@ class ArcSdeRevisionFieldsMixin(models.Model):
     created_user = models.CharField(max_length=255, blank=True, null=True, editable=False,
                                     verbose_name='Created By'
                                     )
-    created_date = models.DateTimeField(blank=True, null=True, editable=False,
+    created_date = fields.ArcSdeDateTimeField(blank=True, null=True, editable=False,
                                     verbose_name='Created On'
                                     )
     last_edited_user = models.CharField(max_length=255, blank=True, null=True,
@@ -212,9 +212,9 @@ class ArcSdeRevisionFieldsMixin(models.Model):
     def get_report_version_info(self):
         return {
             'created_by': self.created_user,
-            'created_on': tz.localize(self.created_date),
+            'created_on': self.created_date,
             'edited_by' : self.get_last_edited_user(),
-            'edited_on' : tz.localize(self.get_last_edited_date())
+            'edited_on' : self.get_last_edited_date()
         }
 
     def was_created_by(self, user):
@@ -294,7 +294,7 @@ class ArcSdeArchiveMixin(models.Model):
     gdb_archive_oid = models.IntegerField(primary_key=True)
 
     if settings.SDE_USE_EVW:  # be sure not to double add field
-        gdb_to_date = models.DateTimeField(editable=False)
+        gdb_to_date = fields.ArcSdeDateTimeField(editable=False)
 
     class Meta:
         abstract = True

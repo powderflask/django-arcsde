@@ -7,7 +7,7 @@ SDE feature models
 from django.conf import settings
 
 TIME_ZONE = settings.TIME_ZONE
-SDE_LOCAL_TIME_ZONE = getattr(settings, 'SDE_LOCAL_TIME_ZONE', 'UTC')
+SDE_DB_TIME_ZONE = getattr(settings, 'SDE_DB_TIME_ZONE', 'UTC')  # AFAIK UTC is non-negotiable - documentation only.
 
 SDE_USE_EVW = getattr(settings, 'SDE_USE_EVW', True)
 

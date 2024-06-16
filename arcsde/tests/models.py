@@ -1,5 +1,7 @@
 
 import uuid
+from datetime import datetime
+
 import django.db.models
 import django.forms
 from arcsde import models, forms
@@ -23,6 +25,7 @@ def create_sde_feature(model_class, **kwargs):
     instance.save()
     return instance
 
+
 class MockSdeIdsMixin(django.db.models.Model):
 
     class Meta:
@@ -38,6 +41,7 @@ class MockSdeIdsMixin(django.db.models.Model):
 
 class SdeFeatureModel(MockSdeIdsMixin, models.ArcSdeAttachmentsMixin, models.AbstractArcSdeFeature):
     some_attr = django.db.models.CharField(verbose_name='some_attr',  blank=True, default='', max_length=50)
+    dt = models.ArcSdeDateTimeField(verbose_name='SDE DateTime', default=datetime.now)
 
     class Meta:
         app_label = 'arcsde_tests'
@@ -58,6 +62,11 @@ class SdeFeatureFormWithObjectid(SdeFeatureForm):
 
     class Meta(SdeFeatureForm.Meta):
         fields = ('some_attr', )
+
+
+class SdeFeatureFormWithDateTime(SdeFeatureForm):
+    class Meta(SdeFeatureForm.Meta):
+        fields = ('dt', )
 
 
 class SdePointFeature(MockSdeIdsMixin, models.ArcSdePointMixin, models.AbstractArcSdeFeature):

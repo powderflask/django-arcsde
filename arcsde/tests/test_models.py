@@ -80,10 +80,10 @@ class ArcSdeRevisionFieldsMixinTests(BaseModelsTests):
         self.assertTrue(self.sde_feature.was_last_edited_by(other_user))
 
     def test_version_info(self):
-        then = datetime.now(tz=tz.LOCAL_TIME_ZONE)
+        then = datetime.now()
         sde_feature = self._get_feature(save=True)
         user = self._get_user()
-        now = datetime.now(tz=tz.LOCAL_TIME_ZONE)
+        now = datetime.now()
         version_info = sde_feature.get_report_version_info()
         self.assertEqual(version_info['edited_by'], user.username)
         self.assertGreaterEqual(version_info['edited_on'], then)

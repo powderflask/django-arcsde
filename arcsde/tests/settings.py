@@ -66,8 +66,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
-SDE_LOCAL_TIME_ZONE = 'US/Pacific'
+TIME_ZONE = 'US/Pacific'
 
 USE_I18N = False
 

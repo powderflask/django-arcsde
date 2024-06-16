@@ -11,6 +11,7 @@ from arcsde.models.models import (
 
 from arcsde.models.fields import (
     ArcSdeGeometryField, ArcSdeLineField, ArcSdePointField,
+    ArcSdeDateTimeField,
 )
 
 from arcsde.models.managers import(
