@@ -1,12 +1,13 @@
 """
     Test suite for SDE base models / business logic
 """
-from datetime import datetime
+import datetime
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django import forms
+from django.utils import timezone
 
-from arcsde import models, tz
+from arcsde import models
 from .models import (
     SdeFeatureModel,
     SdeGeomFeature, SdePointFeature,
@@ -80,10 +81,10 @@ class ArcSdeRevisionFieldsMixinTests(BaseModelsTests):
         self.assertTrue(self.sde_feature.was_last_edited_by(other_user))
 
     def test_version_info(self):
-        then = datetime.now()
+        then = timezone.now()
         sde_feature = self._get_feature(save=True)
         user = self._get_user()
-        now = datetime.now()
+        now = timezone.now()
         version_info = sde_feature.get_report_version_info()
         self.assertEqual(version_info['edited_by'], user.username)
         self.assertGreaterEqual(version_info['edited_on'], then)
@@ -122,7 +123,10 @@ class ConcurrencyLockTests(BaseModelsTests):
         """ if version date is stale, then concurrency check raises a validation error """
         sde_feature = self._get_feature(save=True)
         form = SdeFeatureForm(
-            data=dict(some_attr='test', last_edited_date=datetime(year=2000, month=1, day=1)),
+            data=dict(some_attr='test',
+                      last_edited_date=datetime.datetime(year=2000, month=1, day=1,
+                                                         tzinfo=datetime.timezone.utc)
+                      ),
             instance=sde_feature
         )
         self.assertFalse(form.is_valid())
@@ -142,7 +146,7 @@ class ConcurrencyLockTests(BaseModelsTests):
         """ if pk in form does not match instance, then concurrency check raises a validation error """
         sde_feature = self._get_feature()
         form = SdeFeatureFormWithObjectid(
-            data=dict(some_attr='test', objectid=42, last_edited_date=datetime.now()),
+            data=dict(some_attr='test', objectid=42, last_edited_date=timezone.now()),
             instance=sde_feature
         )
         self.assertFalse(form.is_valid())

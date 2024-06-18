@@ -4,6 +4,7 @@ SDE feature models
 
     Defaults for settings used by arcsde package.
 """
+import sys
 from django.conf import settings
 
 TIME_ZONE = settings.TIME_ZONE
@@ -20,6 +21,11 @@ SDE_EDIT_TRACKING = getattr(settings, 'SDE_EDIT_TRACKING', True)
 # Need to write something to this field - a error is logged if this value is ever used.
 SDE_EDIT_TRACKING_DEFAULT_USERNAME = getattr(settings, 'SDE_EDIT_TRACKING_DEFAULT_USERNAME', 'django-sde-webapp')
 
+# In DEBUG mode, ENFORCE=True will cause an exception to be raised if edit tracking is not done on SDE queryset.
+SDE_EDIT_TRACKING_ENFORCE = getattr(settings, 'SDE_EDIT_TRACKING_ENFORCE', False)
+
 # Default value enables concurrency detection and locks on SDE forms.
 # Set to False to disable concurrency detection.
 SDE_CONCURRENCY_LOCK = getattr(settings, 'SDE_CONCURRENCY_LOCK', True)
+
+UNIT_TESTING = 'test' in sys.argv

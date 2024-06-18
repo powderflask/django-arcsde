@@ -1,12 +1,14 @@
 """
     Utility functions used by arcsde package.
 """
-from datetime import datetime, timedelta
+from django.utils import timezone
+
+from datetime import timedelta
 
 
 def recent_period_start(period_in_hours):
     """ return a Datetime object representing the start time for a period that starts period_in_hours hours ago """
-    return datetime.now() - timedelta(hours=period_in_hours)
+    return timezone.now() - timedelta(hours=period_in_hours)
 
 
 def all_members(aClass):

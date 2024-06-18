@@ -4,6 +4,8 @@
        but the fields should probably not be used in the app itself - they are just proprietary blobs of bits.
     Use the SdeManager to retrieve models with these fields - it will annotate the model with useful fields.
 """
+import warnings
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -44,11 +46,16 @@ class ArcSdeDateTimeField(models.DateTimeField):
 
     description = "Arc SDE localized DateTime field (see settings.SDE_DB_TIME_ZONE)"
 
+    def to_python(self, value):
+        """ Suppress the "naive" datetime warning - we know SDE only uses naive UTC times. """
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=RuntimeWarning)
+            return super().to_python(value)
+
     def from_db_value(self, value, expression, connection):
         """ Take a naive UTC datetime from DB and convert to aware local TZ. """
         if value and not settings.USE_TZ and timezone.is_naive(value):
-            # This should always be true for SDE-backed DB, which store naive datetime, so should not USE_TZ
-            # Localize the datetime from UTC to settings.TIME_ZONE
+            # Localize the naive SDE datetime from UTC to settings.TIME_ZONE
             value = tz.localize(value)
         return value
 
@@ -56,7 +63,6 @@ class ArcSdeDateTimeField(models.DateTimeField):
         """ Convert value to UTC datetime, ready to store in DB. """
         value = super().get_prep_value(value)
         if value and not settings.USE_TZ:
-            # USE_TZ should always be False for SDE-backed DB
-            # Convert datatime to UTC, if it is naive, assume it is in local TIME_ZONE
+            # Convert datetime to UTC, if it is naive, assume it is in local TIME_ZONE
             value = tz.delocalize(value).replace(tzinfo=None)
         return value

@@ -1,9 +1,10 @@
 
 import uuid
-from datetime import datetime
 
 import django.db.models
 import django.forms
+from django.utils import timezone
+
 from arcsde import models, forms
 
 MAX_INT = 0xffffffff//2  # Postgre uses 4-byte integer with max value 2147483647
@@ -41,7 +42,7 @@ class MockSdeIdsMixin(django.db.models.Model):
 
 class SdeFeatureModel(MockSdeIdsMixin, models.ArcSdeAttachmentsMixin, models.AbstractArcSdeFeature):
     some_attr = django.db.models.CharField(verbose_name='some_attr',  blank=True, default='', max_length=50)
-    dt = models.ArcSdeDateTimeField(verbose_name='SDE DateTime', default=datetime.now)
+    dt = models.ArcSdeDateTimeField(verbose_name='SDE DateTime', default=timezone.now)
 
     class Meta:
         app_label = 'arcsde_tests'
