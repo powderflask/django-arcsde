@@ -14,6 +14,7 @@ from .models import (
     SdeFeatureForm, SdeFeatureFormWithObjectid,
 )
 
+
 class TableNameTests(TestCase):
 
     def test_sde_table_names(self):

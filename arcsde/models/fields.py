@@ -46,15 +46,9 @@ class ArcSdeDateTimeField(models.DateTimeField):
 
     description = "Arc SDE localized DateTime field (see settings.SDE_DB_TIME_ZONE)"
 
-    def to_python(self, value):
-        """ Suppress the "naive" datetime warning - we know SDE only uses naive UTC times. """
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=RuntimeWarning)
-            return super().to_python(value)
-
     def from_db_value(self, value, expression, connection):
         """ Take a naive UTC datetime from DB and convert to aware local TZ. """
-        if value and not settings.USE_TZ and timezone.is_naive(value):
+        if value and (not settings.USE_TZ or timezone.is_naive(value)):
             # Localize the naive SDE datetime from UTC to settings.TIME_ZONE
             value = tz.localize(value)
         return value

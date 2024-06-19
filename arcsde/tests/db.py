@@ -8,17 +8,16 @@ from django.apps import apps
 from django.db import connection
 from arcsde.attachments import descriptors
 from arcsde.util import all_members
-from .models import mock_globalid
 
 CREATE = (
     'BEGIN',
     '''
-     CREATE TABLE "{attach_table}" ("globalid" varchar(38) NOT NULL UNIQUE, 
-                                    "attachmentid" integer NOT NULL PRIMARY KEY AUTOINCREMENT, 
-                                    "content_type" varchar(150) NOT NULL, 
-                                    "att_name" varchar(250) NOT NULL, 
-                                    "data_size" integer NOT NULL, 
-                                    "data" BLOB NULL, 
+     CREATE TABLE "{attach_table}" ("globalid" varchar(38) NOT NULL UNIQUE,
+                                    "attachmentid" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                    "content_type" varchar(150) NOT NULL,
+                                    "att_name" varchar(250) NOT NULL,
+                                    "data_size" integer NOT NULL,
+                                    "data" BLOB NULL,
                                     "rel_globalid" varchar(38) NOT NULL)
     ''',
     'CREATE INDEX "{attach_table}_rel_globalid_{globalid}" ON "{attach_table}" ("rel_globalid")',
@@ -27,6 +26,8 @@ CREATE = (
 
 def create_sde_attach_tables(descriptor='sde_attachments', verbosity=0):
     """ Create SDE __attach tables for any model classes with an ArcSdeAttachmentsDescriptor descriptor """
+    from .models import mock_globalid
+
     tables = {None, }  # don't double create attach table, e.g., where both table-backed and view-backed model exist
     with connection.cursor() as cursor:
         if verbosity > 0:
@@ -68,3 +69,7 @@ def mock_sde_functions(conn):
         conn.connection.create_function(fn.__name__, n_arg, fn)
 
 
+def create_tables_for_unmanaged_test_models(conn):
+    from .models import SdeFeatureModel_ddl
+    with conn.cursor() as cursor:
+        cursor.execute(SdeFeatureModel_ddl)

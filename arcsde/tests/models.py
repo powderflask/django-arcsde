@@ -6,6 +6,7 @@ import django.forms
 from django.utils import timezone
 
 from arcsde import models, forms
+from arcsde.tests.db import CREATE
 
 MAX_INT = 0xffffffff//2  # Postgre uses 4-byte integer with max value 2147483647
 
@@ -46,10 +47,23 @@ class SdeFeatureModel(MockSdeIdsMixin, models.ArcSdeAttachmentsMixin, models.Abs
 
     class Meta:
         app_label = 'arcsde_tests'
+        managed = False  # see db.create_tables_for_unmanaged_test_models
         db_table = 'sde_feature'
 
     sde_attachments = models.ArcSdeAttachments()
 
+
+SdeFeatureModel_ddl = """
+CREATE TABLE "sde_feature"
+("objectid" integer PRIMARY KEY AUTOINCREMENT,
+"globalid" varchar(38) NOT NULL UNIQUE,
+"some_attr" varchar(50) NULL,
+"dt" timestamp without time zone NOT NULL,
+"created_user" varchar(50) NULL,
+"created_date" timestamp without time zone NULL,
+"last_edited_user" varchar(50) NULL,
+"last_edited_date" timestamp without time zone NULL);
+"""
 
 class SdeFeatureForm(forms.AbstractSdeForm):
     """ Critically, child form inherits version field from base form, used for concurrency check """

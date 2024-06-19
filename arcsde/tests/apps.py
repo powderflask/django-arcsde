@@ -21,3 +21,4 @@ def extend_sqlite(connection=None, **kwargs):
     from . import db
     if connection.vendor == 'sqlite':  # only applies to SQLite DB, used for running quick tests
         db.mock_sde_functions(connection)
+        db.create_tables_for_unmanaged_test_models(connection)
