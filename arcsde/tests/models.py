@@ -54,7 +54,7 @@ class SdeFeatureModel(MockSdeIdsMixin, models.ArcSdeAttachmentsMixin, models.Abs
 
 
 SdeFeatureModel_ddl = """
-CREATE TABLE "sde_feature"
+CREATE TABLE IF NOT EXISTS "sde_feature"
 ("objectid" integer PRIMARY KEY AUTOINCREMENT,
 "globalid" varchar(38) NOT NULL UNIQUE,
 "some_attr" varchar(50) NULL,

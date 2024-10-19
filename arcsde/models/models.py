@@ -210,8 +210,18 @@ class ArcSdeRevisionFieldsMixin(models.Model):
             else:
                 logger.debug(msg)
             username = settings.SDE_EDIT_TRACKING_DEFAULT_USERNAME
+
+        if not self.pk and isinstance(self, ArcSdeFeatureCreationMixin):
+            self._set_creation_fields(username)
         setattr(self, self.LAST_EDITED_USER_BASE, username)
         setattr(self, self.LAST_EDITED_DATE_BASE, timezone.now())
+
+    def _set_creation_fields(self, username):
+        """ For rare occassions when SDE features are created.  See ArcSdeFeatureCreationMixin for warnings. """
+        if self.pk or not isinstance(self, ArcSdeFeatureCreationMixin):
+            return
+        self.created_user = username
+        self.created_date = timezone.now()
 
     def get_report_version_info(self):
         return {
