@@ -49,6 +49,6 @@ setup(
     test_suite='arcsde.tests',
     tests_require=test_requirements,
     url='https://github.com/powderflask/django-arcsde',
-    version='1.4.2',
+    version='1.4.3',
     zip_safe=False,
 )
