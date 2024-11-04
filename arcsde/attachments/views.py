@@ -1,3 +1,4 @@
+from functools import cached_property
 
 from django.apps import apps
 from django.http import HttpResponse, Http404
@@ -54,11 +55,19 @@ class BaseAttachmentViewMixin:
 
         return related_object
 
+    @cached_property
+    def related_object(self):
+        return self._get_related_object()
+
     def _get_attachments_qs(self):
         """ returns queryset for SDE attachments defined by the kwargs """
         # roughly equivalent to: self._get_related_object().attachment_set.all()
         # use the explicit form below too ensure the attachment model is dynamically created
-        return self._get_attachment_model().objects.filter(related_object=self._get_related_object())
+        return self._get_attachment_model().objects.filter(related_object=self.related_object)
+
+    @cached_property
+    def attachments_qs(self):
+        return self._get_attachments_qs()
 
 
 class AjaxAttachedImagesView(BaseAttachmentViewMixin, AjaxOnlyView):
@@ -70,27 +79,26 @@ class AjaxAttachedImagesView(BaseAttachmentViewMixin, AjaxOnlyView):
 
     def get(self, request, *args, **kwargs):
         # Format results as a set of HTML image tags
-        results = {'attachment_html': self._format_images(request)}
-        return HttpResponse(results['attachment_html'])
+        return HttpResponse("\n".join(self.get_image_tags(request)))
 
     def get_image_attachments(self):
-        return self._get_attachments_qs().sde_image_attachments()
+        return super().attachments_qs.sde_image_attachments()
 
-    def _format_images(self, request):
+    @cached_property
+    def attachments_qs(self):
+        return self.get_image_attachments()
+
+    def get_image_tags(self, request) -> list:
         """
             Format all of the images attached to related_object as HTML image tags
         """
         # Filter for image-type attachments
         attachments = self.get_image_attachments()
 
-        # Create a caption editing form for each one
-        for a in attachments:
-            a.caption_text = a.att_name  # we'll use the ARC native 'att_name' field to store caption.
-            a.caption_form = CaptionForm(a)
-
-        image_tags = [self.image_tag_template.render(context={'attachment': a,}, request=request) for a in attachments]
-
-        return "\n".join(image_tags)
+        return [
+            self.image_tag_template.render(context={'attachment': a, 'caption_form': CaptionForm(a)}, request=request)
+            for a in self.attachments_qs
+        ]
 
 
 class AjaxAttachedCaptionSave(BaseAttachmentViewMixin, AjaxOnlyView):
@@ -98,11 +106,10 @@ class AjaxAttachedCaptionSave(BaseAttachmentViewMixin, AjaxOnlyView):
         Save the image caption related to the model specified in the URL
     """
     def post(self, request, *args, **kwargs):
-        related_object = self._get_related_object()
         attachment_pk = self.kwargs.get('attachment_pk', None)
 
         # Get THE attachment, Save the form
-        attachment = get_object_or_404(self._get_attachments_qs(), pk=attachment_pk)
+        attachment = get_object_or_404(self.attachments_qs, pk=attachment_pk)
         caption_form = CaptionForm(attachment, data=request.POST)
         updated_attachment = caption_form.save()
         if updated_attachment:

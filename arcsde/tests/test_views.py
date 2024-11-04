@@ -53,7 +53,6 @@ class AttachmentsViewsTests(BaseAttachmentModelTests):
         self.assertEqual(response.status_code, 200)
         attached = response.context['attachment']
         self.assertEqual(attached.pk, self.attachment.pk)
-        self.assertIsNotNone(attached.caption_form)
         self.assertIn(b'<img src="data:image/png;base64,', response.content)
         self.assertIn(bytes('<form action="{}"'.format(self.get_caption_save_url()),encoding='utf-8'), response.content)
         # print(response.content)

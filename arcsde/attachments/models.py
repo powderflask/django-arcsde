@@ -112,6 +112,11 @@ class AbstractSdeAttachModel(AbstractArcSdeBase):
             filter = {self._meta.get_field('related_object').target_field.name: self.related_object_id}
             return self.related_model_class.objects.filter(**filter).values_list('pk', flat=True).first()
 
+    @property
+    def caption_text(self) -> str:
+        """ Return a caption for this attachment """
+        return self.att_name
+
     def get_base64_utf8_encoding(self):
         # Encode to get base-64 byte string, decode to UTF-8 for transmission over http
         return base64.b64encode(self.data).decode() if self.data else ''
@@ -219,6 +224,12 @@ class ArcSdeAttachmentsApi:
             self.attachment_set = related_instance.attachment_set
         except AttributeError:
             self.attachment_set = None  # no attachments relation - be sure get_attachment_model has been called!
+
+    @property
+    def unique_id(self) -> str:
+        """ Return a unique slugified identifier for the related SDE instance """
+        id = str(self.instance.pk).strip('{}').replace('-','')   # in case pk is globalid
+        return f"{type(self.instance).__name__}-{id}"
 
     @property
     def has_attachments(self):
