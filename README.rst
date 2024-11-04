@@ -3,7 +3,7 @@ Django ArcSDE
 
 Abstractions and base classes for creating django models from Arc SDE feature tables.
 
- * Version: 1.0.0
+ * Version: 1.4.4
  * Author: powderflask
  * License: MIT
  * URI: https://github.com/powderflask/django-arcsde
