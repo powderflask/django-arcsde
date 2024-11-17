@@ -216,20 +216,27 @@ class ArcSdeAttachmentsApi:
         Usage:                my_attachments = ArcSdeAttachmentsApi(some_sde_feature_instance)
         OR using descriptor:  sde_attachments = ArcSdeAttachmentsDescriptor()
     """
-    def __init__(self, related_instance):
+    def __init__(self, related_instance, sde_feature_type=None):
         """ Create API for caching and access to related_instance.attachment_set """
         # assumes related_name from ConcreteSdeAttachModel.related_object is "attachment_set"
         self.instance = related_instance
+        self.sde_feature_type = sde_feature_type or type(related_instance)
         try:
             self.attachment_set = related_instance.attachment_set
         except AttributeError:
             self.attachment_set = None  # no attachments relation - be sure get_attachment_model has been called!
 
+
+    @property
+    def sde_feature_name(self) -> str:
+        """ Return the type name for the attachment-related SDE Feature for this attachment set """
+        return self.sde_feature_type.__name__
+
     @property
     def unique_id(self) -> str:
         """ Return a unique slugified identifier for the related SDE instance """
         id = str(self.instance.pk).strip('{}').replace('-','')   # in case pk is globalid
-        return f"{type(self.instance).__name__}-{id}"
+        return f"{self.sde_feature_name}-{id}"
 
     @property
     def has_attachments(self):
@@ -257,14 +264,14 @@ class ArcSdeAttachmentsApi:
 
     @cached_property
     def images_url(self):
-        related_class_name = self.instance.__class__.__name__
-        app_label = self.instance._meta.app_label
-        return reverse('arcsde:attachments:images-list-ajax', args=( app_label, related_class_name, self.instance.pk)) \
-            if self.has_attachments else None
+        app_label = self.sde_feature_type._meta.app_label
+        return reverse(
+            'arcsde:attachments:images-list-ajax', args=(app_label, self.sde_feature_name, self.instance.pk)
+        ) if self.has_attachments else None
 
     @property
     def attachments_model(self):
-        return AttachmentModelRegistry.get_attachment_model(self.instance.__class__)
+        return AttachmentModelRegistry.get_attachment_model(self.sde_feature_type)
 
 
 class ArcSdeAttachmentsMixin:
