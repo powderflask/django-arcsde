@@ -182,3 +182,11 @@ class AnnotatedArcSdeManager(ArcSdeManager) :
     def get_queryset(self):
         # SDE report queries often need SDE attachment_count
         return super().get_queryset().annotate_attachment_count()
+
+
+class ArcSdeActiveArchiveManager(ArcSdeManager):
+    """ An ArcSdeManager for ArcSdeArchiveMixin models that filters in only active records. """
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.filter(gdb_to_date__gte=qs.ACTIVE_GDB_TO_DATE)
+        return qs

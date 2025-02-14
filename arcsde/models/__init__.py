@@ -15,7 +15,7 @@ from arcsde.models.fields import (
 )
 
 from arcsde.models.managers import(
-    ArcSdeQuerySet, ArcSdeManager, AnnotatedArcSdeManager,
+    ArcSdeQuerySet, ArcSdeManager, AnnotatedArcSdeManager, ArcSdeActiveArchiveManager,
 )
 
 from arcsde.attachments import (
