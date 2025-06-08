@@ -93,11 +93,11 @@ class AjaxAttachedImagesView(BaseAttachmentViewMixin, AjaxOnlyView):
             Format all of the images attached to related_object as HTML image tags
         """
         # Filter for image-type attachments
-        attachments = self.get_image_attachments()
+        attachments_qs = self.get_image_attachments()
 
         return [
             self.image_tag_template.render(context={'attachment': a, 'caption_form': CaptionForm(a)}, request=request)
-            for a in self.attachments_qs
+            for a in attachments_qs
         ]
 
 
