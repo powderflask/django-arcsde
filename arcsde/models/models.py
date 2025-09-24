@@ -11,6 +11,7 @@ To allow switching between table-backed and evw view-backed models:
 """
 import logging
 
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models, connection
 from django.utils import timezone
 from arcsde import settings, tz
@@ -198,18 +199,23 @@ class ArcSdeRevisionFieldsMixin(models.Model):
             Optionally: pass username directly, e.g., for bulk updates where save logic is skipped.
             Always update the BASE fields - DB trigger determines if the associated *_field_* gets updated.
             Look for annotation that clients must set to enable edit tracking - log error if it is not provided.
+
+            In DEBUG, may raise ImproperlyConfigured if no username is provided or annotated on instance for edit tracking.
         """
         username = username or getattr(self, self.SDE_EDITED_BY_ANNOTATION, None)
         if not username:
             msg = self.EDIT_TRACKING_ERROR.format(feature=repr(self))
             if settings.SDE_EDIT_TRACKING_ENFORCE:
                 if settings.settings.DEBUG and not settings.UNIT_TESTING:
-                    raise Exception(msg)
+                    raise ImproperlyConfigured(msg)
                 else:
                     logger.warning(msg)
             else:
                 logger.debug(msg)
             username = settings.SDE_EDIT_TRACKING_DEFAULT_USERNAME
+
+        # retain username explicitly set by client code for a potential save later - stateful programming - yuck
+        setattr(self, self.SDE_EDITED_BY_ANNOTATION, username)
 
         if not self.pk and isinstance(self, ArcSdeFeatureCreationMixin):
             self._set_creation_fields(username)

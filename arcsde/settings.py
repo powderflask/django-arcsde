@@ -21,7 +21,7 @@ SDE_EDIT_TRACKING = getattr(settings, 'SDE_EDIT_TRACKING', True)
 # Need to write something to this field - a error is logged if this value is ever used.
 SDE_EDIT_TRACKING_DEFAULT_USERNAME = getattr(settings, 'SDE_EDIT_TRACKING_DEFAULT_USERNAME', 'django-sde-webapp')
 
-# In DEBUG mode, ENFORCE=True will cause an exception to be raised if edit tracking is not done on SDE queryset.
+# In DEBUG mode, ENFORCE=True will cause an ImproperlyConfigured exception to be raised if edit tracking is not done on SDE queryset.
 SDE_EDIT_TRACKING_ENFORCE = getattr(settings, 'SDE_EDIT_TRACKING_ENFORCE', False)
 
 # Default value enables concurrency detection and locks on SDE forms.
